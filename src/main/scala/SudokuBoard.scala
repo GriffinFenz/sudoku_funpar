@@ -30,13 +30,20 @@ object SudokuBoard {
 
     // Making the peers for each square
     squares.foreach(square => square.addPeers(square.getUnits.flatten.filter(square1 => square1.getName!=square.getName).toSet))
-
+    /*
+    val list: List[Int] = List.tabulate(81)(_ + 0)
+    def parse_input(input: String) = List.tabulate(81)(_ + 0).foreach(index => {
+      val data: String = if input(index) == '.' then "123456789" else input(index).toString
+      squares(index).addData(data)
+    })
+    */
   }
 
   class Square(n: String) {
     private val name: String = n
     private var units: Vector[Vector[Square]] = Vector()
     private var peers: Set[Square] = Set()
+    private var data: String = ""
 
     def addUnits(that: Vector[Square]) = units = units:+that
     def getUnits: Vector[Vector[Square]] = units
@@ -44,9 +51,16 @@ object SudokuBoard {
     def addPeers(that: Set[Square]) = peers = that
     def getPeers: Set[Square] = peers
 
+    def addData(that: String) = data = that
+    def getData: String = data
+    def removeData(that: String) = {
+      val i: Int = if data.contains(that) then data.indexOf(that) else -1
+      if i != -1 then data = data.slice(0, i)+data.slice(i+1, data.length)
+    }
+
     def getName: String = name
 
-    override def toString: String = s"${name}"
+    override def toString: String = s"${name}: ${data}"
   }
 
   def main(args: Array[String]): Unit = {
@@ -56,8 +70,8 @@ object SudokuBoard {
     println(a.col_group)
     println(a.box_group)
     //a.squares.foreach(square => println(square.getUnits))
-    println(a.squares(19).getUnits)
-    println(a.squares(19).getPeers)
+    //println(a.squares(19).getUnits)
+    //println(a.squares(19).getPeers)
   }
 
 }
