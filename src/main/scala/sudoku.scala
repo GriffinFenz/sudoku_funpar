@@ -1,4 +1,4 @@
-import SudokuBoard.Square
+import SudokuBoard.*
 import scala.util.control.Breaks._
 import scala.collection.mutable
 import scala.collection.mutable.HashMap
@@ -11,6 +11,16 @@ object sudoku {
     List.tabulate(81)(_ + 0).foreach(index => {
       val data: String = if input(index) == '.' then "123456789" else input(index).toString
       board.squares(index).setData(data)
+    })
+  }
+
+  def print_board(board: Board) = {
+    List.tabulate(81)(_ + 0).foreach(index => {
+      if index % 27 == 0 then println()
+      if index % 9 == 0 then  println() else
+      if index % 3 == 0 then print(". ")
+      print(board.squares(index).getData)
+      print(" ")
     })
   }
 
@@ -94,6 +104,7 @@ object sudoku {
       val filtered_by_lowest = board.squares.filter(_.getData.length > 1).sortBy(_.getData.length)
       val saved_values: mutable.HashMap[Square, String] = new mutable.HashMap[Square, String]()
       filtered_by_lowest.foreach(square => saved_values.put(square, square.getData))
+      println(saved_values)
       // Trying one square at a time
       filtered_by_lowest.foreach(square => try_square(square, saved_values))
     }
@@ -105,12 +116,12 @@ object sudoku {
     val input_board1: String = "..3.2.6..9..3.5..1..18.64....81.29..7.......8..67.82....26.95..8..2.3..9..5.1.3.."
     val input_board2: String = "4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......"
     val input_board3: String = "............2.6.9.....1.627.61.842.9..759...442..6378..38657.1264.3.1978172.4..5."
-    val input_board4: String = ""
-    parse_input(input_board3, sudoku_board)
+    val input_board4: String = ".53..1.8.....8.25..1.57...46..43.......69.5.....1.5..8.987.2...2.7.....95....982."
+    parse_input(input_board4, sudoku_board)
     println(sudoku_board.squares)
     //eliminateAll(sudoku_board)
     solve_board(sudoku_board)
-    println(sudoku_board.squares)
+    print_board(sudoku_board)
 
 
 
