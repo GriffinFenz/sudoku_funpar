@@ -51,7 +51,7 @@ object SudokuBoard {
     def addPeers(that: Set[Square]) = peers = that
     def getPeers: Set[Square] = peers
 
-    def addData(that: String) = data = that
+    def setData(that: String) = data = that
     def getData: String = data
     def removeData(that: String) = {
       val i: Int = if data.contains(that) then data.indexOf(that) else -1
