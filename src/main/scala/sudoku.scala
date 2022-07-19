@@ -37,16 +37,20 @@ object sudoku {
   }
 
   // If a unit has a unique value then map it to the square that contains that unique value
-  def eliminateAllUnit(units: SudokuBoard.Board) = {
+  // TODO:: FIX THIS GARBAGE (I think I fixed it)
+  def eliminateAllUnit(units: SudokuBoard.Board): Boolean = {
+    var clean_run = false
     def eliminateOneUnit(unit: Vector[SudokuBoard.Square]) = {
       val countMap: mutable.HashMap[Char, Int] = new mutable.HashMap()
       unit.foreach(square => square.getData.foreach(char => countMap.update(char, countMap.getOrElse(char, 0)+1)))
       val countMap2: mutable.HashMap[Char, Int] = countMap.filter((_, int) => int==1)
-      unit.foreach(square => countMap2.keys.foreach(char => if square.getData.contains(char) then square.setData(char.toString)))
+      unit.foreach(square => countMap2.keys.foreach(char => if square.getData.contains(char)
+      then {if square.getData != char.toString then clean_run = true; square.setData(char.toString) }))
     }
     units.box_group.foreach(unit => eliminateOneUnit(unit))
     units.row_group.foreach(unit => eliminateOneUnit(unit))
     units.col_group.foreach(unit => eliminateOneUnit(unit))
+    clean_run
   }
 
   // Does Constraint Propagation no.1
@@ -56,8 +60,7 @@ object sudoku {
     var afterEliminate: String = ""
     board.squares.map(square => square.getData).foreach(data => afterEliminate+=data)
     while (beforeEliminate != afterEliminate) {
-      clean_run = eliminatePeers(board)
-      eliminateAllUnit(board)
+      if eliminatePeers(board) || eliminateAllUnit(board) then clean_run = true else clean_run = false
       beforeEliminate = afterEliminate
       afterEliminate = ""
       board.squares.map(square => square.getData).foreach(data => afterEliminate+=data)
@@ -73,40 +76,32 @@ object sudoku {
       board.squares.count(square => square.getData.length == 1) == 81
     }
 
-    def try_square(square: Square, saved_values: mutable.HashMap[Square, String]) = {
+    def try_square(square: Square, saved_values: mutable.HashMap[Square, String]): Boolean = {
 
-      val values = square.getData.length
-      var index = 0
-      square.getData.takeWhile(x => {
-        saved_values.foreach(item => item._1.setData(item._2))
-        square.setData(square.getData(index).toString)
-        !eliminateAll(board)
-      })
-      /*
-      while (index < values) {
-        square.setData(square.getData(index).toString)
+      var clean_run = false
+      square.getData.foreach(x => {
+        if clean_run then () else { saved_values.foreach(item => item._1.setData(item._2))
+        square.setData(x.toString)
         println(s"${square.getName}: ${square.getData}")
-        val correct_value = eliminateAll(board)
-        println(correct_value)
-        if correct_value then break else {
-          index = index+1
-          saved_values.foreach(item => item._1.setData(item._2))
-        }
-      }
-      */
+        clean_run = eliminateAll(board) }
+        println(s"Clean?: ${clean_run}, on value ${x}")
+      })
+      clean_run
     }
 
     var a = 0;
 
-    eliminateAll(board)
+    //eliminateAll(board)
+    // TODO:: Change Condition to until board is solved
     for (a <- 1 to 1) {
       // Saving the values that we will change by trying out brute force method
       val filtered_by_lowest = board.squares.filter(_.getData.length > 1).sortBy(_.getData.length)
       val saved_values: mutable.HashMap[Square, String] = new mutable.HashMap[Square, String]()
       filtered_by_lowest.foreach(square => saved_values.put(square, square.getData))
-      println(saved_values)
       // Trying one square at a time
-      filtered_by_lowest.foreach(square => try_square(square, saved_values))
+      // TODO:: If one square works I need to loop again and filter by lowest again and saved_values again
+      // TODO:: If one square fails then yea I need this thing
+      filtered_by_lowest.foreach(square => println(try_square(square, saved_values)))
     }
 
   }
@@ -117,7 +112,9 @@ object sudoku {
     val input_board2: String = "4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......"
     val input_board3: String = "............2.6.9.....1.627.61.842.9..759...442..6378..38657.1264.3.1978172.4..5."
     val input_board4: String = ".53..1.8.....8.25..1.57...46..43.......69.5.....1.5..8.987.2...2.7.....95....982."
-    parse_input(input_board4, sudoku_board)
+    val input_board5: String = "95324178647698325181257693468543719212469857373912546839871264526785431954136982."
+    parse_input(input_board5, sudoku_board)
+    sudoku_board.squares(80).setData("179")
     println(sudoku_board.squares)
     //eliminateAll(sudoku_board)
     solve_board(sudoku_board)
