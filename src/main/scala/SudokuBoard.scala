@@ -1,15 +1,18 @@
+import scala.collection.parallel.CollectionConverters.*
+import scala.collection.parallel.immutable.*
+
 object SudokuBoard {
 
   class Board {
     private val letters: Vector[String] = Vector("A", "B", "C", "D", "E", "F", "G", "H", "I")
     private val numbers: Vector[String] = Vector("1", "2", "3", "4", "5", "6", "7", "8", "9")
     // Building the board of 81 squares
-    val squares: Vector[Square] = letters.flatMap(letter => numbers.map(number => new Square(letter+number)))
+    val squares: Vector[Square] = letters.flatMap(letter => numbers.par.map(number => new Square(letter+number)))
 
     // Making the units for each square
-    val row_group: Vector[Vector[Square]] = Vector(0, 9, 18, 27, 36, 45, 54, 63, 72).map(i => squares.slice(i, i+9))
-    val col_group: Vector[Vector[Square]] = Vector(0, 1, 2, 3, 4, 5, 6, 7, 8)
-      .map(i => Vector(squares(i), squares(i+9), squares(i+18), squares(i+27), squares(i+36),
+    val row_group: ParVector[Vector[Square]] = Vector(0, 9, 18, 27, 36, 45, 54, 63, 72).par.map(i => squares.slice(i, i+9))
+    val col_group: ParVector[Vector[Square]] = Vector(0, 1, 2, 3, 4, 5, 6, 7, 8)
+      .par.map(i => Vector(squares(i), squares(i+9), squares(i+18), squares(i+27), squares(i+36),
         squares(i+45), squares(i+54), squares(i+63), squares(i+72)))
     val box_group: Vector[Vector[Square]] = {
       var ans: Vector[Vector[Square]] = Vector()
@@ -24,19 +27,12 @@ object SudokuBoard {
       }
       ans
     }
-    row_group.foreach(group => group.foreach(square => square.addUnits(group)))
-    col_group.foreach(group => group.foreach(square => square.addUnits(group)))
-    box_group.foreach(group => group.foreach(square => square.addUnits(group)))
+    row_group.par.foreach(group => group.par.foreach(square => square.addUnits(group)))
+    col_group.par.foreach(group => group.par.foreach(square => square.addUnits(group)))
+    box_group.par.foreach(group => group.par.foreach(square => square.addUnits(group)))
 
     // Making the peers for each square
-    squares.foreach(square => square.addPeers(square.getUnits.flatten.filter(square1 => square1.getName!=square.getName).toSet))
-    /*
-    val list: List[Int] = List.tabulate(81)(_ + 0)
-    def parse_input(input: String) = List.tabulate(81)(_ + 0).foreach(index => {
-      val data: String = if input(index) == '.' then "123456789" else input(index).toString
-      squares(index).addData(data)
-    })
-    */
+    squares.par.foreach(square => square.addPeers(square.getUnits.flatten.filter(square1 => square1.getName!=square.getName).toSet))
   }
 
   class Square(n: String) {
