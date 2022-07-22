@@ -69,7 +69,6 @@ object sudoku {
     clean_run
   }
 
-
   def solve_board(board: SudokuBoard.Board) = {
 
     def is_solved(board: SudokuBoard.Board): Boolean = {
@@ -77,16 +76,34 @@ object sudoku {
     }
 
     def try_square(square: Square, saved_values: mutable.HashMap[Square, String]): Boolean = {
-
+      println(saved_values)
       var clean_run = false
       square.getData.foreach(x => {
+        // If the value worked then do nothing else reset it back to saved point and try next value
         if clean_run then () else { saved_values.foreach(item => item._1.setData(item._2))
         square.setData(x.toString)
-        println(s"${square.getName}: ${square.getData}")
+        //println(s"${square.getName}: ${square.getData}")
         clean_run = eliminateAll(board) }
-        println(s"Clean?: ${clean_run}, on value ${x}")
+        //println(s"Clean?: ${clean_run}, on value ${x}")
       })
+      // TODO:: Might need to remove this if a value must work no matter what
+      if !clean_run then saved_values.foreach(item => item._1.setData(item._2))
       clean_run
+    }
+
+    def try_all_squares(filtered: Vector[Square], saved_value: mutable.HashMap[Square, String], index: Int): Boolean = {
+      if is_solved(board) || index >= filtered.size then true else {
+        if try_square(filtered(index), saved_value) then {
+          val filtered_by_lowest = board.squares.filter(_.getData.length > 1).sortBy(_.getData.length)
+          val saved_values_new: mutable.HashMap[Square, String] = new mutable.HashMap[Square, String]()
+          filtered_by_lowest.foreach(square => saved_values_new.put(square, square.getData))
+          try_all_squares(filtered_by_lowest, saved_values_new, 0)
+        }
+        else {
+          try_all_squares(filtered, saved_value, index + 1)
+        }
+        false
+      }
     }
 
     var a = 0;
@@ -101,9 +118,19 @@ object sudoku {
       // Trying one square at a time
       // TODO:: If one square works I need to loop again and filter by lowest again and saved_values again
       // TODO:: If one square fails then yea I need this thing
-      filtered_by_lowest.foreach(square => println(try_square(square, saved_values)))
+      //filtered_by_lowest.foreach(square => try_square(square, saved_values))
+
+      try_all_squares(filtered_by_lowest, saved_values, 0)
     }
 
+  }
+
+  // TODO:: Broke
+  def truly_solved(board: Board): Boolean = {
+    val a: Int = board.col_group.count(square_vector => square_vector.distinct.size == 9)
+    val b: Int = board.row_group.count(square_vector => square_vector.distinct.size == 9)
+    val c: Int = board.box_group.count(square_vector => square_vector.distinct.size == 9)
+    a == 9 && b == 9 && c == 9
   }
 
   def main(args: Array[String]): Unit = {
@@ -113,12 +140,13 @@ object sudoku {
     val input_board3: String = "............2.6.9.....1.627.61.842.9..759...442..6378..38657.1264.3.1978172.4..5."
     val input_board4: String = ".53..1.8.....8.25..1.57...46..43.......69.5.....1.5..8.987.2...2.7.....95....982."
     val input_board5: String = "95324178647698325181257693468543719212469857373912546839871264526785431954136982."
-    parse_input(input_board5, sudoku_board)
-    sudoku_board.squares(80).setData("179")
+    parse_input(input_board3, sudoku_board)
+    //sudoku_board.squares(80).setData("7")
     println(sudoku_board.squares)
-    //eliminateAll(sudoku_board)
     solve_board(sudoku_board)
     print_board(sudoku_board)
+    println()
+    println(truly_solved(sudoku_board))
 
 
 
