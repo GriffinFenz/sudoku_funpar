@@ -58,16 +58,4 @@ object SudokuBoard {
 
     override def toString: String = s"${name}: ${data}"
   }
-
-  def main(args: Array[String]): Unit = {
-    val a: Board = new Board()
-    println(a.squares)
-    println(a.row_group)
-    println(a.col_group)
-    println(a.box_group)
-    //a.squares.foreach(square => println(square.getUnits))
-    //println(a.squares(19).getUnits)
-    //println(a.squares(19).getPeers)
-  }
-
 }
