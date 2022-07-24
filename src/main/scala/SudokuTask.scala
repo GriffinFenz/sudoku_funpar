@@ -75,6 +75,29 @@ object SudokuTask {
       clean_run
     }
 
+    // If there is a twin withing a unit then eliminate every other value in those cells with the twins
+    def eliminateTwins(): Boolean = {
+      var clean_run = false
+      def eliminateOneUnit(unit: Vector[SudokuBoard.Square]) = {
+        // Check occurrence of the number in the entire Unit
+        val countMap: mutable.HashMap[Char, Int] = new mutable.HashMap()
+        unit.par.foreach(square => square.getData.foreach(char => countMap.update(char, countMap.getOrElse(char, 0)+1)))
+        // Does Twin search and eliminate
+        unit.filter(square => square.getData.length > 2).par.foreach(square => unit.par.foreach(square2 => {
+          val sharedValues = square2.getData.filter(num => square.getData.contains(num))
+          if sharedValues.length == 2 && countMap(sharedValues(0))==2 && countMap(sharedValues(1))==2 then  {
+            clean_run = true
+            square.setData(sharedValues)
+            square2.setData(sharedValues)
+          }
+        }))
+      }
+      board.box_group.par.foreach(unit => eliminateOneUnit(unit))
+      board.row_group.par.foreach(unit => eliminateOneUnit(unit))
+      board.col_group.par.foreach(unit => eliminateOneUnit(unit))
+      clean_run
+    }
+
     // Uses all my elimination techniques
     def eliminateAll(): Boolean = {
       var clean_run: Boolean = true
@@ -82,7 +105,7 @@ object SudokuTask {
       var afterEliminate: String = ""
       board.squares.par.map(square => square.getData).par.foreach(data => afterEliminate+=data)
       while (beforeEliminate != afterEliminate) {
-        if eliminatePeers() || eliminateAllUnit() then clean_run = true else clean_run = false
+        if eliminateTwins() || eliminatePeers() || eliminateAllUnit() then clean_run = true else clean_run = false
         beforeEliminate = afterEliminate
         afterEliminate = ""
         board.squares.map(square => square.getData).par.foreach(data => afterEliminate+=data)
@@ -90,7 +113,7 @@ object SudokuTask {
       clean_run
     }
 
-
+    //
     parse_input(input)
     eliminateAll()
     // Saving the values that we will change by trying out brute force method
